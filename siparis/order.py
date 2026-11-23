@@ -17,6 +17,7 @@ class Customer:
 class InvoiceInfo:
     company_name: str
     tax_number: str
+    tax_office: str = ""
 
 
 @dataclass
@@ -28,8 +29,18 @@ class PaymentRecord:
 
 # Builder'ın Product'ı, State'in Context'i, Observer'ın ConcreteSubject'i
 class Order(OrderSubject):
-    def __init__(self, order_id, customer, items, address, distance_km,
-                 note="", coupon_code=None, coupon_rate=Decimal("0"), invoice=None):
+    def __init__(
+        self,
+        order_id: int,
+        customer: Customer,
+        items: list,
+        address: str | None,
+        distance_km: float,
+        note: str = "",
+        coupon_code: str | None = None,
+        coupon_rate: Decimal = Decimal("0"),
+        invoice: InvoiceInfo | None = None,
+    ) -> None:
         super().__init__()
         self.id = order_id
         self.customer = customer
@@ -41,62 +52,62 @@ class Order(OrderSubject):
         self.coupon_rate = coupon_rate
         self.invoice = invoice
         self.state = AwaitingPaymentState()
-        self.transaction_id = None
-        self.payment_provider = None
+        self.transaction_id: str | None = None
+        self.payment_provider: str | None = None
         self.price = None
 
-    def item_descriptions(self):
-        counts = {}
+    def item_descriptions(self) -> list[str]:
+        counts: dict[str, int] = {}
         for item in self.items:
             desc = item.description()
             counts[desc] = counts.get(desc, 0) + 1
         result = []
         for desc, n in counts.items():
-            result.append(f"{n}× {desc}" if n > 1 else desc)
+            result.append(f"{n}x {desc}" if n > 1 else desc)
         return result
 
-    def subtotal(self):
+    def subtotal(self) -> Decimal:
         total = Decimal("0")
         for item in self.items:
             total += item.price()
         return to_money(total)
 
     @property
-    def requires_courier(self):
+    def requires_courier(self) -> bool:
         if self.price is None:
             return True
         return self.price.requires_courier
 
     @property
-    def paid_amount(self):
+    def paid_amount(self) -> Decimal:
         if self.price is None:
             return Decimal("0.00")
         return self.price.total
 
-    def record_payment(self, payment):
+    def record_payment(self, payment: PaymentRecord) -> None:
         self.state.mark_paid(self, payment)
 
-    def accept(self):
+    def accept(self) -> None:
         self.state.accept(self)
 
-    def hand_over(self):
+    def hand_over(self) -> None:
         self.state.hand_over(self)
 
-    def complete(self):
+    def complete(self) -> None:
         self.state.complete(self)
 
-    def cancel(self, reason):
+    def cancel(self, reason: str) -> None:
         self.state.cancel(self, reason)
 
-    def apply_payment(self, payment):
+    def apply_payment(self, payment: PaymentRecord) -> None:
         self.transaction_id = payment.transaction_id
         self.payment_provider = payment.provider
         self.price = payment.breakdown
 
-    def change_state(self, new_state):
+    def change_state(self, new_state) -> None:
         old_state = self.state
         self.state = new_state
         self.notify(OrderEvent(self, old_state, new_state))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Order(#{self.id}, {self.customer.name}, {self.state.name})"
