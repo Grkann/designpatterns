@@ -1,9 +1,15 @@
 from siparis.builder import CorporateOrderBuilder, IndividualOrderBuilder, OrderBuildError, OrderDirector
 from siparis.checkout import CheckoutService
-from siparis.delivery import ExpressDelivery, PickupDelivery, StandardDelivery
+from siparis.delivery import (
+    BadWeatherExpressDelivery,
+    ExpressDelivery,
+    PickupDelivery,
+    ScheduledDelivery,
+    StandardDelivery,
+)
 from siparis.external.globalcard import GlobalCardSDK
 from siparis.external.kolaypay import KolayPayClient
-from siparis.menu import DoubleMeat, ExtraCheese, ExtraSauce, default_catalog
+from siparis.menu import DoubleMeat, ExtraCheese, ExtraNotApplicableError, ExtraSauce, default_catalog
 from siparis.money import fmt
 from siparis.observers import CourierDispatcher, CustomerNotifier, RefundHandler, RestaurantPanel
 from siparis.order import Customer
@@ -45,12 +51,22 @@ def main():
     )
     for item in order.items:
         print(f"  - {item.description():45} {fmt(item.price())}")
+    try:
+        DoubleMeat(menu["kola"])
+    except ExtraNotApplicableError as e:
+        print(f"  Beklenen hata: {e}")
 
     checkout = CheckoutService(kolaypay)
-    strategies = [StandardDelivery(), ExpressDelivery(), PickupDelivery()]
-    print("\nTeslimat seçenekleri:")
+    strategies = [
+        StandardDelivery(),
+        ExpressDelivery(),
+        PickupDelivery(),
+        ScheduledDelivery(slot_minutes=90),
+        BadWeatherExpressDelivery(),
+    ]
+    print("\nTeslimat seçenekleri (ucuzdan pahalıya):")
     for q in checkout.quote_options(order, strategies):
-        print(f"  {q.method_name:18} ücret {fmt(q.delivery_fee):>10}  toplam {fmt(q.total):>10}  ~{q.estimated_minutes} dk")
+        print(f"  {q.method_name:22} ücret {fmt(q.delivery_fee):>10}  toplam {fmt(q.total):>10}  ~{q.estimated_minutes} dk")
 
     watch(order, kolaypay, panel, couriers)
     print()

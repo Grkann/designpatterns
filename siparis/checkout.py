@@ -1,4 +1,4 @@
-from .delivery import PriceCalculator
+from .delivery import DeliveryStrategy, PriceBreakdown, PriceCalculator
 from .order import PaymentRecord
 
 
@@ -10,18 +10,14 @@ class CheckoutService:
     def __init__(self, gateway):
         self.gateway = gateway
 
-    def quote_options(self, order, strategies):
-        calculator = PriceCalculator(strategies[0])
-        quotes = []
-        for strategy in strategies:
-            calculator.set_strategy(strategy)
-            quotes.append(calculator.calculate(order))
-        return quotes
+    def quote_options(self, order, strategies: list[DeliveryStrategy]) -> list[PriceBreakdown]:
+        """Siparişe uygun teslimat seçeneklerini ucuzdan pahalıya listeler."""
+        if not strategies:
+            raise ValueError("En az bir teslimat seçeneği verilmeli.")
+        return PriceCalculator(strategies[0]).compare(order, strategies)
 
-    def checkout(self, order, strategy):
-        if strategy.requires_courier and order.address is None:
-            raise ValueError(f"'{strategy.name}' için teslimat adresi gerekli.")
-
+    def checkout(self, order, strategy: DeliveryStrategy) -> PriceBreakdown:
+        # Yöntemin bu siparişe uygun olup olmadığına strateji karar verir (adres, mesafe sınırı...).
         breakdown = PriceCalculator(strategy).calculate(order)
         result = self.gateway.charge(breakdown.total, order.customer.id)
         if not result.success:
