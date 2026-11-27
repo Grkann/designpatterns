@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yemek Sipariş — Tasarım Kalıpları</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">YS</div>
+      <div>
+        <div class="brand-title">Yemek Sipariş ve Teslimat Sistemi</div>
+        <div class="brand-sub">Tasarım Kalıpları dönem projesi · canlı demo</div>
+      </div>
+    </div>
+    <nav class="pills" id="pills">
+      <span class="pill g-create" data-pattern="Builder">Builder</span>
+      <span class="pill g-struct" data-pattern="Adapter">Adapter</span>
+      <span class="pill g-struct" data-pattern="Decorator">Decorator</span>
+      <span class="pill g-behav" data-pattern="Strategy">Strategy</span>
+      <span class="pill g-behav" data-pattern="State">State</span>
+      <span class="pill g-behav" data-pattern="Observer">Observer</span>
+    </nav>
+    <div class="row">
+      <button class="btn ghost small" data-act="reset" title="Tüm siparişleri ve sepeti temizler">Sıfırla</button>
+      <button class="btn primary small" data-act="presentToggle" id="present-toggle" title="Demoyu sıfırlar ve senaryoyu tek tuşla adım adım oynatır">▶ Sunum modu</button>
+    </div>
+  </header>
+
+  <nav class="stepper" id="stepper"></nav>
+
+  <div class="layout">
+    <main id="main"></main>
+    <aside class="side" id="side"></aside>
+  </div>
+
+  <div class="present" id="present" hidden>
+    <div class="present-progress"><span id="pp-bar"></span></div>
+    <div class="present-inner">
+      <div class="present-meta">
+        <span class="present-pattern" id="pp-pattern"></span>
+        <span class="present-count" id="pp-count"></span>
+      </div>
+      <div class="present-text">
+        <div class="present-title" id="pp-title"></div>
+        <div class="present-cap" id="pp-cap"></div>
+        <div class="present-say" id="pp-say"></div>
+      </div>
+      <div class="present-btns">
+        <button class="btn ghost small" data-act="presentRestart" title="Demoyu sıfırlayıp baştan başlar">Baştan</button>
+        <button class="btn primary big" data-act="presentNext" id="pp-next">İleri →</button>
+      </div>
+    </div>
+    <div class="present-keys">→ / Boşluk: ileri · N: konuşma notu · Esc: çık</div>
+  </div>
+
+  <div class="toast" id="toast" role="alert"></div>
+  <script src="app.js"></script>
+</body>
+</html>
